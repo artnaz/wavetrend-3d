@@ -1,0 +1,17 @@
+[flake8]
+ignore =
+    # "multiple spaces before operator" -- handy when aligning e.g. dictionaries
+    E221,
+    # " multiple spaces after ':'" -- handy when aligning e.g. dictionaries
+    E241,
+    # continuation line unaliged for hanging indent -- handy when aligning
+    E131,
+    # "line break after binary operator" -- new rule is "W504 line break before binary operator"
+     W503
+exclude =
+    .venv,
+    .pytest_cache,
+    __pycache__,
+max-line-length = 120
+# https://en.wikipedia.org/wiki/Cyclomatic_complexity
+max-complexity = 20

@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "wavetrend-3d"
+version = "0.1.0"
+description = ""
+authors = ["Arthur Nazarian <arthur@zumin.nl>"]
+readme = "README.md"
+packages = [{include = "wavetrend_3d"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+numpy = "^1.26.4"
+polars = "^0.20.9"
+plotly = "^5.19.0"
+
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^7.0.0"
+pytest = "^8.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
