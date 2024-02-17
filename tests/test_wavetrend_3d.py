@@ -9,9 +9,10 @@ class TestWaveTrend3D:
     @pytest.fixture(scope="class")
     def df(self):
         """Fixture to load the dataframe once for all tests in this class."""
-        path = Path().absolute().parent / 'tests/data/sample_btc_data.parquet'
-        assert path.exists(), 'Path with sample data not found'
-        return pl.read_parquet(path)
+        base_dir = Path(__file__).resolve().parent
+        data_file_path = base_dir / 'data/sample_btc_data.parquet'
+        assert data_file_path.exists(), 'Path with sample data not found'
+        return pl.read_parquet(data_file_path)
 
     @pytest.fixture
     def sample_numpy_data(self, df):
