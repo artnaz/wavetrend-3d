@@ -73,6 +73,9 @@ And for reference a screenshot from TradingView (note that the data is not ident
 
 * Signals like crossover, median crosses and divergences are not automatically observed yet.
 * Unit tests can be expanded. At this moment, the visualisation part and custom arguments are not tested.
+* The dual pole filter (`apply_dual_pole_filter()`) has a loop that ideally should not be used within Python. We started
+  on a vectorised version in the code, but didn't get the same results. Stopped getting it to work as there are no
+  speed issues when using the function as it is now. But ideally, it should be resolved to be more "Pythonesque".
 
 ## Limitations
 
