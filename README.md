@@ -52,7 +52,7 @@ from wavetrend_3d.plotting import PlotWaveTrend3D
 plot_mirror = True  # to easily switch whether to add a mirrored version
 
 if plot_mirror:
-    # set the proportions for the price, regular oscillator, and mirrored oscillator
+    # set the image's height proportions for the price, regular oscillator, and mirrored oscillator
     plot = PlotWaveTrend3D([.7, .2, .1], height=800)
 else:
     # set the proportions for the price and regular oscillator
@@ -69,6 +69,11 @@ The code above results in the following plot (note that by default, the regular 
 And for reference a screenshot from TradingView (note that the data is not identical):
 ![tradingview](assets%2Ftradingview_screenshot.jpg "WaveTrend 3D screenshot from TradingView")
 
+## Next steps
+
+* Signals like crossover, median crosses and divergences are not automatically observed yet.
+* Unit tests can be expanded. At this moment, the visualisation part and custom arguments are not tested.
+
 ## Limitations
 
 * Obviously, this is just one indicator and in our opinion should not be used in isolation for trading.
@@ -76,4 +81,3 @@ Ideally, this package should be used with another, more comprehensive library
 * The TradingView implementation excels in beautiful views and customisation.
 Here we do not support many of those settings (yet), e.g. emphasising a certain series or
 separating the three dimensions.
-* Similarly, signals like crossover, median crosses and divergences are not labeled (yet)
