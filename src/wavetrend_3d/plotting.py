@@ -143,10 +143,9 @@ def split_signal(signal: np.ndarray, fill=None, threshold=0):
 
 
 def add_oscillator(
-        fig: go.Figure, datetime: np.ndarray, signal: np.ndarray, name: str,
-        row: int = None, line_opacity: float = 1., fill_opacity: float = 1.,
-        line_width: Union[float, int] = 1, colour_pos=None, colour_neg=None,
-        show_legend: bool = True
+        fig: go.Figure, datetime: np.ndarray, signal: np.ndarray, name: str, row: int = None,
+        line_opacity: float = 1., fill_opacity: float = 1., line_width: Union[float, int] = 1,
+        colour_pos: str = None, colour_neg: str = None, mirror: bool = False, show_legend: bool = True
 ) -> go.Figure:
     """
     Add an oscillator subplot to a Plotly Figure with positive and negative values and a fill until the zero line
@@ -177,6 +176,9 @@ def add_oscillator(
         The color used to display positive values in the oscillator (default is '#009988', Google green).
     colour_neg : str, optional
         The color used to display negative values in the oscillator (default is '#CC3311', Google red).
+    mirror : bool, optional
+        When enabled, the output colour is reversed (positive <--> negative) to ensure mirrored values are correctly
+        displayed.
     show_legend : bool, optional, default: True
         Whether to show the series in the legend. In that case, only the lines will be shown in the legend,
         but they all will be connected as a group to be able to select and deselect interactively.
@@ -203,39 +205,48 @@ def add_oscillator(
 
     colour_pos = '#009988' if colour_pos is None else colour_pos  # standard green
     colour_neg = '#CC3311' if colour_neg is None else colour_neg  # standard red
+    colour_pos, colour_neg = (colour_neg, colour_pos) if mirror else (colour_pos, colour_neg)  # switch when mirrored
     transparent_colour = 'rgba(0, 0, 0, 0)'
 
-    signal_pos_bfill, signal_neg_bfill = split_signal(signal, 'bfill')
-    signal_pos_zero, signal_neg_zero = split_signal(signal, 'zero')
+    # Adjust to use colour_mapping for positive and negative signal colouring
+    signal_pos_bfill, signal_neg_bfill  = split_signal(-signal if mirror else signal, 'bfill')
+    signal_pos_zero, signal_neg_zero    = split_signal(-signal if mirror else signal, 'zero')
 
     # positive fill (this could have been done in one step, but Plotly makes the fill ugly)
-    fig.add_trace(go.Scatter(  # positive fill
+    fig.add_scatter(  # positive fill
         x=datetime, y=signal_pos_zero,
         name=f'{name} + fill', legendgroup=name, showlegend=False,
         line=dict(color=transparent_colour, width=0),  # do not show the line
         fill='tozeroy',
-        fillcolor=hex_to_rgba(colour_pos, fill_opacity)
-    ), row=row, col=1)
+        fillcolor=hex_to_rgba(colour_pos, fill_opacity),
+        row=row, col=1
+    )
+
     # negative fill
-    fig.add_trace(go.Scatter(
+    fig.add_scatter(
         x=datetime, y=signal_neg_zero,
         name=f'{name} - fill', legendgroup=name, showlegend=False,
         line=dict(color=transparent_colour, width=0),  # do not show the line
         fill='tozeroy',
         fillcolor=hex_to_rgba(colour_neg, fill_opacity),
-    ), row=row, col=1)
+        row=row, col=1
+    )
+
     # positive line
-    fig.add_trace(go.Scatter(
+    fig.add_scatter(
         x=datetime, y=signal_pos_bfill,
         name=f'{name} +', legendgroup=name, showlegend=show_legend,
-        line=dict(color=hex_to_rgba(colour_pos, line_opacity), width=line_width)
-    ), row=row, col=1)
+        line=dict(color=hex_to_rgba(colour_pos, line_opacity), width=line_width),
+        row=row, col=1
+    )
+
     # negative line
-    fig.add_trace(go.Scatter(
+    fig.add_scatter(
         x=datetime, y=signal_neg_bfill,
         name=f'{name} -', legendgroup=name, showlegend=show_legend,
-        line=dict(color=hex_to_rgba(colour_neg, line_opacity), width=line_width)
-    ), row=row, col=1)
+        line=dict(color=hex_to_rgba(colour_neg, line_opacity), width=line_width),
+        row=row, col=1
+    )
 
     return fig
 
@@ -262,30 +273,28 @@ class PlotWaveTrend3D:
             self._add_mirror_oscillator(signal_fast, signal_norm, signal_slow)
 
     def _add_main_oscillator(self, signal_fast, signal_norm, signal_slow):
-        general_config = dict(fig=self.fig, datetime=self.datetime, show_legend=True, row=2)
+        general_config = dict(fig=self.fig, datetime=self.datetime, show_legend=True, row=2, fill_opacity=0.1)
         self.fig = add_oscillator(signal=signal_slow, name='WT3D signal (slow)',
-                                  line_opacity=0.7, fill_opacity=0.1, line_width=3, **general_config)
+                                  line_opacity=0.6, line_width=2, **general_config)
         self.fig = add_oscillator(signal=signal_norm, name='WT3D signal (norm)',
-                                  line_opacity=0.9, fill_opacity=0.1, line_width=1.5, **general_config)
+                                  line_opacity=0.7, line_width=1.2, **general_config)
         self.fig = add_oscillator(signal=signal_fast, name='WT3D signal (fast)',
-                                  line_opacity=0.8, fill_opacity=0.1, line_width=0.5, **general_config)
+                                  line_opacity=0.7, line_width=0.5, **general_config)
 
     def _add_mirror_oscillator(self, signal_fast, signal_norm, signal_slow):
-        general_config = dict(fig=self.fig, datetime=self.datetime, row=3, line_opacity=0.2, fill_opacity=0.12)
-        self.fig = add_oscillator(signal=signal_slow, name='WT3D mirror (slow)', show_legend=True,
-                                  line_width=1, **general_config)
-        self.fig = add_oscillator(signal=-signal_slow, name='WT3D mirror (slow)', show_legend=False,
-                                  line_width=1, **general_config)
+        general_config = dict(fig=self.fig, datetime=self.datetime, row=3, fill_opacity=0.2, line_opacity=0.)
 
-        self.fig = add_oscillator(signal=signal_norm, name='WT3D mirror (norm)', show_legend=True,
-                                  line_width=1, **general_config)
-        self.fig = add_oscillator(signal=-signal_norm, name='WT3D mirror (norm)', show_legend=False,
-                                  line_width=1, **general_config)
+        self.fig = add_oscillator(signal=signal_slow, name='WT3D mirror (slow)', show_legend=True, **general_config)
+        self.fig = add_oscillator(
+            signal=signal_slow, name='WT3D mirror (slow)', show_legend=False, mirror=True, **general_config)
 
-        self.fig = add_oscillator(signal=signal_fast, name='WT3D mirror (fast)', show_legend=True,
-                                  line_width=1, **general_config)
-        self.fig = add_oscillator(signal=-signal_fast, name='WT3D mirror (fast)', show_legend=False,
-                                  line_width=1, **general_config)
+        self.fig = add_oscillator(signal=signal_norm, name='WT3D mirror (norm)', show_legend=True, **general_config)
+        self.fig = add_oscillator(
+            signal=signal_norm, name='WT3D mirror (norm)', show_legend=False, mirror=True, **general_config)
+
+        self.fig = add_oscillator(signal=signal_fast, name='WT3D mirror (fast)', show_legend=True, **general_config)
+        self.fig = add_oscillator(
+            signal=signal_fast, name='WT3D mirror (fast)', show_legend=False, mirror=True, **general_config)
 
     def _initialize_ohlc(self, df: pl.DataFrame, market=None, interval=None):
         if not isinstance(df, pl.DataFrame):
@@ -380,4 +389,5 @@ class PlotWaveTrend3D:
 
     def show(self):
         self._fig_final_layout()
+        # self.fig.update_layout(template='plotly_dark', showlegend=False)  # for /assets/plotting_screenshot.jpg
         self.fig.show()

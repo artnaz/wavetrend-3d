@@ -1,29 +1,12 @@
+# test_wavetrend_3d.py
+
 import numpy as np
-import polars as pl
 import pytest
-from pathlib import Path
 from src.wavetrend_3d.wavetrend_3d import WaveTrend3D
+from src.wavetrend_3d.plotting import PlotWaveTrend3D
 
 
 class TestWaveTrend3D:
-    @pytest.fixture(scope="class")
-    def df(self):
-        """Fixture to load the dataframe once for all tests in this class."""
-        base_dir = Path(__file__).resolve().parent
-        data_file_path = base_dir / 'data/sample_btc_data.parquet'
-        assert data_file_path.exists(), 'Path with sample data not found'
-        return pl.read_parquet(data_file_path)
-
-    @pytest.fixture
-    def sample_numpy_data(self, df):
-        """Sample numpy array data for testing."""
-        return df.select('close').to_numpy()
-
-    @pytest.fixture
-    def sample_polars_series(self, df):
-        """Sample Polars Series data for testing."""
-        return df['close']
-
     def test_initialization_with_numpy_array(self, sample_numpy_data):
         """Test initialization with a Numpy array."""
         wt3d = WaveTrend3D(sample_numpy_data)
@@ -63,3 +46,30 @@ class TestWaveTrend3D:
         pass
         # wt3d = WaveTrend3D(sample_numpy_data)
         # TODO This test checks the returned values
+
+
+class TestPlotWaveTrend3D:
+    @pytest.fixture(scope='class')
+    def plot(self, df, sample_polars_series):
+        wt3d = WaveTrend3D(sample_polars_series)
+        series_fast, series_norm, series_slow = wt3d.get_series()
+
+        plot = PlotWaveTrend3D([.7, .2, .1], height=800)
+        plot.add_candles(df, 'BTC-USDT', '1h')
+        plot.add_oscillators(series_fast, series_norm, series_slow, main=True, mirror=True)
+
+        return plot
+
+    def test_plotting_data(self, plot, monkeypatch):
+        # Mock the `show` method to do nothing
+        monkeypatch.setattr("plotly.graph_objs.Figure.show", lambda x: None)
+        plot.show()
+
+        assert plot.fig is not None, "Plot figure should not be None"
+        assert len(plot.fig.data) > 0, "Plot figure should contain data"
+
+        # Check if the number of traces matches the expected number
+        assert len(plot.fig.data) > 10, f"Expected more than 10 traces, got {len(plot.fig.data)}"
+
+        # Check if titles, axis labels, or other properties are set correctly
+        assert plot.fig.layout.title.text is not None, "Plot should have a title"
