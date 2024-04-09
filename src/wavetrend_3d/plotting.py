@@ -8,7 +8,7 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from src.wavetrend_3d.utilities import hex_to_rgba
+from common.utilities import hex_to_rgba
 
 
 def split_signal(signal: np.ndarray, fill=None, threshold=0):
