@@ -2,20 +2,18 @@
 # shows a practical example how to use the library
 # Copyright (C) 2024 Arthur Nazarian
 
-# import ccxt   # for illustration purposes, not include in dependencies
+import ccxt   # for illustration purposes, not included in dependencies
 import polars as pl
 
 from src.wavetrend_3d.plotting import PlotWaveTrend3D
 from src.wavetrend_3d.wavetrend_3d import WaveTrend3D
 
 # --- 1. Get data --- #
-# binance = ccxt.binance()
-# df = pl.LazyFrame(
-#     binance.fetch_ohlcv('BTC/USDT', '1h'),
-#     schema=['timestamp', 'open', 'high', 'low', 'close', 'volume']
-# )
-# df.write_parquet('test.parquet')
-df = pl.scan_parquet('test.parquet')
+binance = ccxt.binance()
+df = pl.LazyFrame(
+    binance.fetch_ohlcv('BTC/USDT', '1h'),
+    schema=['timestamp', 'open', 'high', 'low', 'close', 'volume']
+)
 df = (
     df
     .with_columns(
@@ -25,7 +23,7 @@ df = (
     .rename({'timestamp': 'datetime'})
 ).collect()
 print(df)
-# df.write_parquet('sample_btc_data.parquet')
+df.write_parquet('sample_btc_data.parquet')
 
 
 # --- 2. Calculate WaveTrend3D oscillator series --- #
