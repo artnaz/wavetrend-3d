@@ -464,5 +464,5 @@ class PlotWaveTrend3D:
 
     def show(self):
         self._fig_final_layout()
-        self.fig.update_layout(template='plotly_dark', showlegend=False)  # for /assets/plotting_screenshot.jpg
+        # self.fig.update_layout(template='plotly_dark', showlegend=False)  # for /assets/plotting_screenshot.jpg
         self.fig.show()
