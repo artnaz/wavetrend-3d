@@ -9,6 +9,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from common.utilities import hex_to_rgba
+from src.wavetrend_3d.wavetrend_3d import WaveTrend3D
 
 
 def split_signal(signal: np.ndarray, fill=None, threshold=0):
@@ -195,7 +196,7 @@ def add_oscillator(
     """
     if row is None:
         raise NotImplementedError(
-            'Only plotting a oscillator is not implemented, should be a subplot; thus provide `row`'
+            'Only plotting an oscillator is not implemented, should be a subplot; thus provide `row`'
         )
     if (line_opacity < 0.) | (line_opacity > 1.) | (fill_opacity < 0.) | (fill_opacity > 1.):
         raise ValueError('The colour transparencies should be floats in the range [0.0, 1.0]')
@@ -209,8 +210,8 @@ def add_oscillator(
     transparent_colour = 'rgba(0, 0, 0, 0)'
 
     # Adjust to use colour_mapping for positive and negative signal colouring
-    signal_pos_bfill, signal_neg_bfill  = split_signal(-signal if mirror else signal, 'bfill')
-    signal_pos_zero, signal_neg_zero    = split_signal(-signal if mirror else signal, 'zero')
+    signal_pos_bfill, signal_neg_bfill = split_signal(-signal if mirror else signal, 'bfill')
+    signal_pos_zero, signal_neg_zero = split_signal(-signal if mirror else signal, 'zero')
 
     # positive fill (this could have been done in one step, but Plotly makes the fill ugly)
     fig.add_scatter(  # positive fill
@@ -261,40 +262,114 @@ class PlotWaveTrend3D:
         self.colour_bear = '#CC3311'
         self.num_subplots = len(subplot_proportions)
 
+        self.wt: WaveTrend3D = None  # WaveTrend3D instance
+
     def add_candles(self, df: pl.DataFrame, market: str = None, interval: str = None):
         self._initialize_ohlc(df, market, interval)
         self._fig_main_candles()
 
-    def add_oscillators(self, signal_fast, signal_norm, signal_slow, main=True, mirror=False):
+    def add_wavetrend(self, wavetrend_instance: WaveTrend3D, main=True, mirror=False):
         """'main' is the regular WaveTrend3D oscillator, 'mirror' is the symmetrical/mirrored one."""
+        self.wt = wavetrend_instance
         if main:
-            self._add_main_oscillator(signal_fast, signal_norm, signal_slow)
+            self._add_main_oscillator(row=2)
+            self._add_signals(row=2)
         if mirror:
-            self._add_mirror_oscillator(signal_fast, signal_norm, signal_slow)
+            self._add_mirror_oscillator(row=3 if main else 2)
 
-    def _add_main_oscillator(self, signal_fast, signal_norm, signal_slow):
-        general_config = dict(fig=self.fig, datetime=self.datetime, show_legend=True, row=2, fill_opacity=0.1)
-        self.fig = add_oscillator(signal=signal_slow, name='WT3D signal (slow)',
+    def _add_main_oscillator(self, row: int):
+        general_config = dict(fig=self.fig, datetime=self.datetime, show_legend=True, row=row, fill_opacity=0.1)
+        self.fig = add_oscillator(signal=self.wt.series_slow, name='WT3D signal (slow)',
                                   line_opacity=0.6, line_width=2, **general_config)
-        self.fig = add_oscillator(signal=signal_norm, name='WT3D signal (norm)',
+        self.fig = add_oscillator(signal=self.wt.series_norm, name='WT3D signal (norm)',
                                   line_opacity=0.7, line_width=1.2, **general_config)
-        self.fig = add_oscillator(signal=signal_fast, name='WT3D signal (fast)',
+        self.fig = add_oscillator(signal=self.wt.series_fast, name='WT3D signal (fast)',
                                   line_opacity=0.7, line_width=0.5, **general_config)
 
-    def _add_mirror_oscillator(self, signal_fast, signal_norm, signal_slow):
-        general_config = dict(fig=self.fig, datetime=self.datetime, row=3, fill_opacity=0.2, line_opacity=0.)
+    def _add_mirror_oscillator(self, row: int):
+        general_config = dict(fig=self.fig, datetime=self.datetime, row=row, fill_opacity=0.2, line_opacity=0.)
 
-        self.fig = add_oscillator(signal=signal_slow, name='WT3D mirror (slow)', show_legend=True, **general_config)
         self.fig = add_oscillator(
-            signal=signal_slow, name='WT3D mirror (slow)', show_legend=False, mirror=True, **general_config)
+            signal=self.wt.series_fast, name='WT3D mirror (fast)', show_legend=True, **general_config)
+        self.fig = add_oscillator(
+            signal=self.wt.series_fast, name='WT3D mirror (fast)', show_legend=False, mirror=True, **general_config)
 
-        self.fig = add_oscillator(signal=signal_norm, name='WT3D mirror (norm)', show_legend=True, **general_config)
         self.fig = add_oscillator(
-            signal=signal_norm, name='WT3D mirror (norm)', show_legend=False, mirror=True, **general_config)
+            signal=self.wt.series_norm, name='WT3D mirror (norm)', show_legend=True, **general_config)
+        self.fig = add_oscillator(
+            signal=self.wt.series_norm, name='WT3D mirror (norm)', show_legend=False, mirror=True, **general_config)
 
-        self.fig = add_oscillator(signal=signal_fast, name='WT3D mirror (fast)', show_legend=True, **general_config)
         self.fig = add_oscillator(
-            signal=signal_fast, name='WT3D mirror (fast)', show_legend=False, mirror=True, **general_config)
+            signal=self.wt.series_slow, name='WT3D mirror (slow)', show_legend=True, **general_config)
+        self.fig = add_oscillator(
+            signal=self.wt.series_slow, name='WT3D mirror (slow)', show_legend=False, mirror=True, **general_config)
+
+    def _add_signals(self, row: int):
+        def _get_series_coordinates(idx):
+            return self.datetime.to_numpy()[idx], self.wt.series_norm[idx]
+
+        def _get_series_median(idx):
+            return self.datetime.to_numpy()[idx], np.zeros_like(idx, dtype='f8')
+
+        general_config = dict(mode='markers', row=row, col=1)
+        opacity = 0.7
+        colour_bullish = 'teal'
+        colour_bearish = 'chocolate'
+        size_cross = 3
+        size_divergence = 7
+        size_median = 8
+
+        # Add markers of regular crosses norm-fast crosses
+        if self.wt.fast_norm_cross_bullish is not None:
+            t, y = _get_series_coordinates(self.wt.fast_norm_cross_bullish)
+            self.fig.add_scatter(x=t, y=y, name='cross (+)', legendgroup='cross', **general_config,
+                                 marker=dict(color=colour_bullish, size=size_cross, opacity=opacity))
+
+            t, y = _get_series_coordinates(self.wt.fast_norm_cross_bearish)
+            self.fig.add_scatter(x=t, y=y, name='cross (-)', legendgroup='cross', **general_config,
+                                 marker=dict(color=colour_bearish, size=size_cross, opacity=opacity))
+
+        # Add markers of divergences
+        if self.wt.divergence_bullish is not None:
+            t, y = _get_series_coordinates(self.wt.divergence_bullish)
+            self.fig.add_scatter(x=t, y=y, name='divergence (+)', legendgroup='divergence', **general_config,
+                                 marker=dict(color=colour_bullish, size=size_divergence, opacity=opacity))
+
+            # Bearish divergence
+            t, y = _get_series_coordinates(self.wt.divergence_bearish)
+            self.fig.add_scatter(x=t, y=y, name='divergence (-)', legendgroup='divergence', **general_config,
+                                 marker=dict(color=colour_bearish, size=size_divergence, opacity=opacity))
+
+        if self.wt.slow_median_cross_bullish is not None:
+            # visible='legendonly' sets these traces to not show at launch
+            marker_bullish_config = dict(
+                color=colour_bullish, symbol='star-triangle-up', size=size_median, opacity=opacity)
+            marker_bearish_config = dict(
+                color=colour_bearish, symbol='star-triangle-down', size=size_median, opacity=opacity)
+
+            # Fast median cross
+            t, y = _get_series_median(self.wt.fast_median_cross_bullish)
+            self.fig.add_scatter(x=t, y=y, name='fast median cross (+)', **general_config, visible='legendonly',
+                                 legendgroup='fast median', marker=marker_bullish_config)
+            t, y = _get_series_median(self.wt.fast_median_cross_bearish)
+            self.fig.add_scatter(x=t, y=y, name='fast median cross (-)', **general_config, visible='legendonly',
+                                 legendgroup='fast median', marker=marker_bearish_config)
+
+            # Normal median cross
+            t, y = _get_series_median(self.wt.norm_median_cross_bullish)
+            self.fig.add_scatter(x=t, y=y, name='norm median cross (+)', **general_config, visible='legendonly',
+                                 legendgroup='norm median', marker=marker_bullish_config)
+            t, y = _get_series_median(self.wt.norm_median_cross_bearish)
+            self.fig.add_scatter(x=t, y=y, name='norm median cross (-)', **general_config, visible='legendonly',
+                                 legendgroup='norm median', marker=marker_bearish_config)
+
+            # Slow median cross
+            t, y = _get_series_median(self.wt.slow_median_cross_bullish)
+            self.fig.add_scatter(x=t, y=y, name='slow median cross (+)', **general_config, visible='legendonly',
+                                 legendgroup='slow median', marker=marker_bullish_config)
+            t, y = _get_series_median(self.wt.slow_median_cross_bearish)
+            self.fig.add_scatter(x=t, y=y, name='slow median cross (-)', **general_config, visible='legendonly',
+                                 legendgroup='slow median', marker=marker_bearish_config)
 
     def _initialize_ohlc(self, df: pl.DataFrame, market=None, interval=None):
         if not isinstance(df, pl.DataFrame):
@@ -389,5 +464,5 @@ class PlotWaveTrend3D:
 
     def show(self):
         self._fig_final_layout()
-        # self.fig.update_layout(template='plotly_dark', showlegend=False)  # for /assets/plotting_screenshot.jpg
+        self.fig.update_layout(template='plotly_dark', showlegend=False)  # for /assets/plotting_screenshot.jpg
         self.fig.show()

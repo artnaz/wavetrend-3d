@@ -1,10 +1,10 @@
 [tool.poetry]
 name = "wavetrend-3d"
-version = "0.8.0"
+version = "0.9.0"
 description = "WaveTrend 3D -- indicator using signal processing techniques to standardise the price of an asset on 3 dimensions"
 authors = ["Arthur Nazarian <arthur@zumin.nl>"]
 readme = "README.md"
-packages = [{include = "wavetrend_3d"}]
+packages = [{include = "src"}]
 
 [project.urls]
 Homepage = "https://github.com/artnaz/wavetrend-3d"
@@ -13,13 +13,13 @@ Issues = "https://github.com/artnaz/wavetrend-3d/issues"
 [tool.poetry.dependencies]
 python = "^3.10"
 numpy = "^1.26.4"
-polars = "^0.20.10"
-plotly = "^5.19.0"
-
+polars = "^0.20.19"
+plotly = "^5.20.0"
+scipy = "^1.13.0"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.0.0"
-pytest = "^8.0.0"
+pytest = "^8.1.1"
 
 [build-system]
 requires = ["poetry-core"]

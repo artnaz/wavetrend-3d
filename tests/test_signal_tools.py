@@ -41,4 +41,3 @@ class TestSignalTools:
         assert np.array_equal(new_cross_over, true_cross_over)
         assert np.array_equal(new_cross_down, true_cross_down)
         assert np.array_equal(new_cross, true_cross)
-

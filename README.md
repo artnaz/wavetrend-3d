@@ -37,9 +37,10 @@ from wavetrend_3d.wavetrend_3d import WaveTrend3D
 df = ... # Polars DataFrame with typical Open, High, Low, Close data
 
 wt3d = WaveTrend3D(df['close'])
-osc_fast, osc_norm, osc_slow = wt3d.get_series()
+wt3d.compute_series()
+wt3d.compute_signals()
 ```
-The docstrings of the `get_series()` method explain the settings that can be changed when calling the method.
+The docstrings of the `compute_series()` method explain the settings that can be changed when calling the method.
 
 Especially for this indicator, the visual aspect is very important. Plotting the indicator is non-trivial.
 The Plotly library is used due to its dynamic, responsive features. This comes with some limitations for e.g.
@@ -52,14 +53,14 @@ from wavetrend_3d.plotting import PlotWaveTrend3D
 plot_mirror = True  # to easily switch whether to add a mirrored version
 
 if plot_mirror:
-    # set the image's height proportions for the price, regular oscillator, and mirrored oscillator
-    plot = PlotWaveTrend3D([.7, .2, .1], height=800)
+  # set the image's height proportions for the price, regular oscillator, and mirrored oscillator
+  plot = PlotWaveTrend3D([.7, .2, .1], height=800)
 else:
-    # set the proportions for the price and regular oscillator
-    plot = PlotWaveTrend3D([.8, .2], height=800)
+  # set the proportions for the price and regular oscillator
+  plot = PlotWaveTrend3D([.8, .2], height=800)
 
 plot.add_candles(df, 'BTC-USDT', '1h')
-plot.add_oscillators(osc_fast, osc_norm, osc_slow, main=True, mirror=plot_mirror)
+plot.add_wavetrend(wt3d, main=True, mirror=plot_mirror)
 plot.show()
 ```
 
@@ -69,10 +70,10 @@ The code above results in the following plot (note that by default, the regular 
 And for reference a screenshot from TradingView (note that the data is not identical):
 ![tradingview](assets%2Ftradingview_screenshot.jpg "WaveTrend 3D screenshot from TradingView")
 
-## Next steps
+## Notes
 
-* Signals like crossover, median crosses and divergences are not automatically observed yet.
-* The mirrored view has split colours through the median, which should not be the case. Should be trivial to update.
+* Compared to the TradingView implementation, we use a different smoothing function to determine the long-term trend
+  when computing divergences. Other than that, everything should be identical.
 * Unit tests can be expanded. At this moment, the visualisation part and custom arguments are not tested.
 * The dual pole filter (`apply_dual_pole_filter()`) has a loop that ideally should not be used within Python. We started
   on a vectorised version in the code, but didn't get the same results. Stopped getting it to work as there are no

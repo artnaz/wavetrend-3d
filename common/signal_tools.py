@@ -80,31 +80,31 @@ def cross(a: np.ndarray, b: Union[np.ndarray, float, int]) -> np.ndarray:
     return cross_over(a, b) | cross_down(a, b)
 
 
-#  Slower than Numpy due to relatively simple function and the overhead of conversions, aliases, etc.
-import polars as pl
-def _cross_polars(a: Union[np.ndarray, pl.Series, float, int], b: Union[np.ndarray, pl.Series, float, int]):
-    df = pl.LazyFrame({'input': a, 'threshold': b})
-    df = (
-        df
-        .with_columns(
-            pl.col('input').shift(1).alias('input-1'),
-            pl.col('threshold').shift(1).alias('threshold-1'),
-            pl.col('input').shift(2).alias('input-2'),
-            pl.col('threshold').shift(2).alias('threshold-2'),
-        )
-        .with_columns(
-            cross_over=
-            (pl.col('input-1').lt(pl.col('threshold-1')) |
-             (pl.col('input-1').eq(pl.col('threshold-1')) & pl.col('input-2').lt(pl.col('threshold-2')))) &
-            pl.col('input').gt(pl.col('threshold')),
-            cross_down=
-            (pl.col('input-1').gt(pl.col('threshold-1')) |
-             (pl.col('input-1').eq(pl.col('threshold-1')) & pl.col('input-2').gt(pl.col('threshold-2')))) &
-            pl.col('input').lt(pl.col('threshold'))
-        )
-        .with_columns(
-            cross=pl.col('cross_over') | pl.col('cross_down')
-        )
-    )
-    # would need to select cross_over/cross_down/cross
-    return df.select(pl.exclude('input', 'threshold')).fill_null(False).collect().to_series()
+# #  Slower than Numpy due to relatively simple function and the overhead of conversions, aliases, etc.
+# import polars as pl
+# def _cross_polars(a: Union[np.ndarray, pl.Series, float, int], b: Union[np.ndarray, pl.Series, float, int]):
+#     df = pl.LazyFrame({'input': a, 'threshold': b})
+#     df = (
+#         df
+#         .with_columns(
+#             pl.col('input').shift(1).alias('input-1'),
+#             pl.col('threshold').shift(1).alias('threshold-1'),
+#             pl.col('input').shift(2).alias('input-2'),
+#             pl.col('threshold').shift(2).alias('threshold-2'),
+#         )
+#         .with_columns(
+#             cross_over=
+#             (pl.col('input-1').lt(pl.col('threshold-1')) |
+#              (pl.col('input-1').eq(pl.col('threshold-1')) & pl.col('input-2').lt(pl.col('threshold-2')))) &
+#             pl.col('input').gt(pl.col('threshold')),
+#             cross_down=
+#             (pl.col('input-1').gt(pl.col('threshold-1')) |
+#              (pl.col('input-1').eq(pl.col('threshold-1')) & pl.col('input-2').gt(pl.col('threshold-2')))) &
+#             pl.col('input').lt(pl.col('threshold'))
+#         )
+#         .with_columns(
+#             cross=pl.col('cross_over') | pl.col('cross_down')
+#         )
+#     )
+#     # would need to select cross_over/cross_down/cross
+#     return df.select(pl.exclude('input', 'threshold')).fill_null(False).collect().to_series()

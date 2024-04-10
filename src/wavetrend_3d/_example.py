@@ -28,8 +28,9 @@ df.write_parquet('sample_btc_data.parquet')
 
 # --- 2. Calculate WaveTrend3D oscillator series --- #
 wt3d = WaveTrend3D(df['close'])
-osc_fast, osc_norm, osc_slow = wt3d.get_series()
-print('Fast oscillator\'s shape:', osc_fast.shape)
+wt3d.compute_series()
+wt3d.compute_signals()
+print('Fast oscillator\'s shape:', wt3d.series_fast.shape)
 
 
 # --- 3. Plot WaveTrend3D --- #
@@ -43,5 +44,5 @@ else:
     plot = PlotWaveTrend3D([.8, .2], height=800)
 
 plot.add_candles(df, 'BTC-USDT', '1h')
-plot.add_oscillators(osc_fast, osc_norm, osc_slow, main=True, mirror=plot_mirror)
+plot.add_wavetrend(wt3d, main=True, mirror=plot_mirror)
 plot.show()

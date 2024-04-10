@@ -2,8 +2,9 @@
 
 import numpy as np
 import pytest
-from src.wavetrend_3d.wavetrend_3d import WaveTrend3D
+
 from src.wavetrend_3d.plotting import PlotWaveTrend3D
+from src.wavetrend_3d.wavetrend_3d import WaveTrend3D
 
 
 class TestWaveTrend3D:
@@ -47,16 +48,21 @@ class TestWaveTrend3D:
         # wt3d = WaveTrend3D(sample_numpy_data)
         # TODO This test checks the returned values
 
+    def test_signals(self):
+        pass
+        # TODO This test checks the arrays with signals
+
 
 class TestPlotWaveTrend3D:
     @pytest.fixture(scope='class')
     def plot(self, df, sample_polars_series):
         wt3d = WaveTrend3D(sample_polars_series)
-        series_fast, series_norm, series_slow = wt3d.get_series()
+        wt3d.compute_series()
+        wt3d.compute_signals()
 
         plot = PlotWaveTrend3D([.7, .2, .1], height=800)
         plot.add_candles(df, 'BTC-USDT', '1h')
-        plot.add_oscillators(series_fast, series_norm, series_slow, main=True, mirror=True)
+        plot.add_wavetrend(wt3d, main=True, mirror=True)
 
         return plot
 
