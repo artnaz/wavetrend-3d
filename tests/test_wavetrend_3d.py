@@ -68,7 +68,7 @@ class TestPlotWaveTrend3D:
 
     def test_plotting_data(self, plot, monkeypatch):
         # Mock the `show` method to do nothing
-        monkeypatch.setattr("plotly.graph_objs.Figure.show", lambda x: None)
+        # monkeypatch.setattr("plotly.graph_objs.Figure.show", lambda x: None)
         plot.show()
 
         assert plot.fig is not None, "Plot figure should not be None"
