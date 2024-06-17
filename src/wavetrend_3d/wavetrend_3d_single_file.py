@@ -81,6 +81,7 @@ def cross(a: np.ndarray, b: Union[np.ndarray, float, int]) -> np.ndarray:
     """
     return cross_over(a, b) | cross_down(a, b)
 
+
 def normalize_derivative(data: np.ndarray, quadratic_mean_length: Union[int, float]) -> np.ndarray:
     """
     Normalize the discrete second derivative of a data series using the quadratic mean (RMS).

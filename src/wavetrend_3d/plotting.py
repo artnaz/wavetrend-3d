@@ -8,8 +8,8 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from common.utilities import hex_to_rgba
-from src.wavetrend_3d.wavetrend_3d import WaveTrend3D
+from wavetrend_3d.common.utilities import hex_to_rgba
+from wavetrend_3d.wavetrend_3d import WaveTrend3D
 
 
 def split_signal(signal: np.ndarray, fill=None, threshold=0):

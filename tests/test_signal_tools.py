@@ -2,7 +2,7 @@
 
 import numpy as np
 import pytest
-from common.signal_tools import cross, cross_down, cross_over
+from wavetrend_3d.common.signal_tools import cross, cross_down, cross_over
 
 
 class TestSignalTools:

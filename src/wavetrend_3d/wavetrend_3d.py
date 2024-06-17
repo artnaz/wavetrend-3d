@@ -7,8 +7,8 @@ import polars as pl
 import numpy as np
 from scipy.ndimage import gaussian_filter1d
 
-from src.wavetrend_3d.signal_processing import get_oscillator
-from common.signal_tools import cross_over, cross_down
+from wavetrend_3d.signal_processing import get_oscillator
+from wavetrend_3d.common.signal_tools import cross_over, cross_down
 
 
 class WaveTrend3D:

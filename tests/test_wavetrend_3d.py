@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 
-from src.wavetrend_3d.plotting import PlotWaveTrend3D
-from src.wavetrend_3d.wavetrend_3d import WaveTrend3D
+from wavetrend_3d.plotting import PlotWaveTrend3D
+from wavetrend_3d.wavetrend_3d import WaveTrend3D
 
 
 class TestWaveTrend3D:

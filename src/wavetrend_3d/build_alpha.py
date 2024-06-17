@@ -3,7 +3,7 @@
 
 
 # You need to import the class WaveTrend3D. This needs to be correctly applied in the platform.
-from src.wavetrend_3d.wavetrend_3d_single_file import WaveTrend3D
+from wavetrend_3d.wavetrend_3d_single_file import WaveTrend3D
 import polars as pl  # WaveTrend3D uses this instead of Pandas
 
 # from pathlib import Path
@@ -22,12 +22,10 @@ def ReadData():
 
     # Get data in Build Alpha: they seem to be using pandas (`import pandas as pd`)
     # WaveTrend3D uses Polars, so you need to convert it this way:
-    df1 = pl.from_pandas(df_pandas)  # Assuming `df_pandas` is loaded the usual way
+    df1 = pl.from_pandas(df_pandas)  # noqa: F821
 
     # Or better, if there are no nuances and it works, read the CSV directly
     # df1 = pl.read_csv(file_name_base, ...)
-
-
 
 
 def GetCustomSignal():

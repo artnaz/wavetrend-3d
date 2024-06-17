@@ -5,8 +5,8 @@
 import ccxt   # for illustration purposes, not included in dependencies
 import polars as pl
 
-from src.wavetrend_3d.plotting import PlotWaveTrend3D
-from src.wavetrend_3d.wavetrend_3d import WaveTrend3D
+from wavetrend_3d.plotting import PlotWaveTrend3D
+from wavetrend_3d.wavetrend_3d import WaveTrend3D
 
 # --- 1. Get data --- #
 binance = ccxt.binance()
