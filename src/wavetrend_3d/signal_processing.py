@@ -66,10 +66,11 @@ def normalize_derivative(data: np.ndarray, quadratic_mean_length: Union[int, flo
     ))
 
 
-def apply_dual_pole_filter(data: np.ndarray, lookback: Union[int, float]) -> np.ndarray:
+def super_smoother(data: np.ndarray, lookback: Union[int, float]) -> np.ndarray:
 
     """
         Apply a dual-pole low-pass filter to a data series for smoothing and trend analysis.
+        Developed by John F. Ehlers -- Cybernetic Analysis for Stocks and Futures (2004), Chapter 13
 
         This function implements a digital filter that averages the data while giving more
         weight to recent values, using a specific lookback period. It's designed to reduce
@@ -102,11 +103,12 @@ def apply_dual_pole_filter(data: np.ndarray, lookback: Union[int, float]) -> np.
         - There are different versions of dual pole filters. This is a direct port from Justin Dehorty's
           TradingView implementation
         """
-    omega = -99 * np.pi / (70 * lookback)
-    alpha = np.exp(omega)
-    beta = -np.power(alpha, 2)
-    gamma = np.cos(omega) * 2 * alpha
-    delta = 1 - gamma - beta
+    omega = -np.sqrt(2) * np.pi / lookback
+    a1 = np.exp(omega)
+    b1 = np.cos(omega) * 2 * a1
+    c2 = b1
+    c3 = -np.power(a1, 2)
+    c1 = 1 - c2 - c3
 
     # moving average with window=2 and 'backward-fill' as first element to make the shape equal to `data`
     sliding_avg = np.insert((data[:-1] + data[1:]) / 2, 0, data[0])
@@ -120,9 +122,9 @@ def apply_dual_pole_filter(data: np.ndarray, lookback: Union[int, float]) -> np.
             filtered[i] = np.nan
         else:
             filtered[i] = (
-                delta * sliding_avg[i]
-                + gamma * (filtered[i - 1] if not np.isnan(filtered[i - 1]) else 0)
-                + beta  * (filtered[i - 2] if not np.isnan(filtered[i - 2]) else 0)
+                c1 * sliding_avg[i]
+                + b1 * (filtered[i - 1] if not np.isnan(filtered[i - 1]) else 0)
+                + c3  * (filtered[i - 2] if not np.isnan(filtered[i - 2]) else 0)
             )
     return filtered
 
@@ -168,4 +170,4 @@ def get_oscillator(src, smoothing_frequency: float, quadratic_mean_length: Union
     """
     tanh_norm_deriv = np.tanh(normalize_derivative(src, quadratic_mean_length))
     # return np.insert(apply_dual_pole_filter(tanh_norm_deriv, smoothing_frequency), 0, np.full(2, np.nan))
-    return apply_dual_pole_filter(tanh_norm_deriv, smoothing_frequency)
+    return super_smoother(tanh_norm_deriv, smoothing_frequency)
