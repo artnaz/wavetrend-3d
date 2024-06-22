@@ -26,4 +26,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.include]
-"src/wavetrend_3d/*" = "src/wavetrend_3d/*"
+"src/wavetrend_3d/*" = ["src/wavetrend_3d/*"]
